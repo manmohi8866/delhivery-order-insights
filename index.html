@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DELHIVERY ORDER INSIGHTS</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f1f5f9;
+  color: #172033;
+}
+[hidden] {
+  display: none !important;
+}
+.login-box {
+  width: 92%;
+  max-width: 420px;
+  margin: 10vh auto;
+  background: white;
+  padding: 32px;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px #00000015;
+}
+h2 {
+  text-align: center;
+  margin-bottom: 8px;
+}
+.subtitle {
+  text-align: center;
+  color: #64748b;
+  margin-bottom: 28px;
+}
+label {
+  display: block;
+  margin-top: 15px;
+  font-size: 14px;
+  font-weight: bold;
+}
+input, select {
+  width: 100%;
+  padding: 13px;
+  margin-top: 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 15px;
+}
+button {
+  padding: 13px 20px;
+  background: #172033;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.login-button {
+  width: 100%;
+  margin-top: 22px;
+}
+#message {
+  color: #dc2626;
+  font-size: 14px;
+  text-align: center;
+}
+header {
+  background: #172033;
+  color: white;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+header button {
+  background: #dc2626;
+}
+.container {
+  max-width: 1200px;
+  margin: 25px auto;
+  padding: 15px;
+}
+.panel {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+}
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(180px,1fr));
+  gap: 15px;
+  align-items: end;
+}
+.notice {
+  padding: 15px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="loginPage" class="login-box">
+
+  <h2>DELHIVERY</h2>
+  <p class="subtitle">ORDER INSIGHTS</p>
+
+  <form id="loginForm">
+
+    <label>Email Address</label>
+    <input
+      type="email"
+      id="email"
+      placeholder="Enter email"
+      autocomplete="username"
+      required
+    >
+
+    <label>Password</label>
+    <input
+      type="password"
+      id="password"
+      placeholder="Enter password"
+      autocomplete="current-password"
+      required
+    >
+
+    <button
+      type="submit"
+      id="loginButton"
+      class="login-button"
+    >
+      Secure Login
+    </button>
+
+  </form>
+
+  <p id="message" role="alert"></p>
+
+</div>
+
+<div id="dashboard" hidden>
+
+  <header>
+    <strong>DELHIVERY ORDER INSIGHTS</strong>
+    <button id="logoutButton">Logout</button>
+  </header>
+
+  <div class="container">
+
+    <div class="panel">
+
+      <h3>Order Report</h3>
+
+      <div class="filters">
+
+        <div>
+          <label>From Date</label>
+          <input type="date" id="fromDate">
+        </div>
+
+        <div>
+          <label>To Date</label>
+          <input type="date" id="toDate">
+        </div>
+
+        <div>
+          <label>Delhivery Panel</label>
+          <select id="panel">
+            <option>All 5 Panels</option>
+            <option>Panel 1</option>
+            <option>Panel 2</option>
+            <option>Panel 3</option>
+            <option>Panel 4</option>
+            <option>Panel 5</option>
+          </select>
+        </div>
+
+        <button disabled>
+          Generate Report
+        </button>
+
+      </div>
+
+      <div class="notice">
+        Admin Login Verified.
+        Live Delhivery connection is pending.
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+const SUPABASE_URL =
+  "https://vevfrckovwsnwnqetoge.supabase.co";
+
+const SUPABASE_KEY =
+  "PASTE_YOUR_PUBLISHABLE_KEY_HERE";
+
+const BACKEND_URL =
+  "https://delhivery-order-insights.manmohi8866.workers.dev";
+
+const loginPage =
+  document.getElementById("loginPage");
+
+const dashboard =
+  document.getElementById("dashboard");
+
+const message =
+  document.getElementById("message");
+
+const loginButton =
+  document.getElementById("loginButton");
+
+let accessToken = null;
+
+document.getElementById("loginForm")
+.addEventListener("submit", async function(e) {
+
+  e.preventDefault();
+
+  message.textContent = "";
+  loginButton.disabled = true;
+  loginButton.textContent = "Logging in...";
+
+  try {
+
+    const response = await fetch(
+      SUPABASE_URL +
+      "/auth/v1/token?grant_type=password",
+      {
+        method: "POST",
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: document.getElementById("email").value,
+          password: document.getElementById("password").value
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.access_token) {
+      throw new Error("Invalid login or configuration.");
+    }
+
+    const adminResponse = await fetch(
+      BACKEND_URL + "/api/admin-test",
+      {
+        headers: {
+          "Authorization": "Bearer " + data.access_token
+        }
+      }
+    );
+
+    if (!adminResponse.ok) {
+      throw new Error("Admin access denied.");
+    }
+
+    accessToken = data.access_token;
+
+    document.getElementById("password").value = "";
+
+    loginPage.hidden = true;
+    dashboard.hidden = false;
+
+    const today = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Kolkata",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).formatToParts(new Date());
+
+    const part = type =>
+      today.find(p => p.type === type).value;
+
+    const date =
+      part("year") + "-" +
+      part("month") + "-" +
+      part("day");
+
+    document.getElementById("fromDate").value = date;
+    document.getElementById("toDate").value = date;
+
+  } catch (error) {
+
+    accessToken = null;
+    message.textContent = error.message;
+
+  } finally {
+
+    loginButton.disabled = false;
+    loginButton.textContent = "Secure Login";
+
+  }
+
+});
+
+document.getElementById("logoutButton")
+.addEventListener("click", async function() {
+
+  const token = accessToken;
+  accessToken = null;
+
+  dashboard.hidden = true;
+  loginPage.hidden = false;
+
+  if (token) {
+    try {
+      await fetch(SUPABASE_URL + "/auth/v1/logout", {
+        method: "POST",
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Authorization": "Bearer " + token
+        }
+      });
+    } catch {}
+  }
+
+});
+
+</script>
+
+</body>
+</html>
